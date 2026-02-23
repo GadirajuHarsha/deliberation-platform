@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  /* Comforting Emerald Green */
+  --color-primary-50: #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --color-primary-700: #047857;
+  --color-primary-900: #064e3b;
+
+  /* Monochromatic Slate/Zinc */
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+}
+
+body {
+  background-color: var(--color-surface-50);
+  color: var(--color-surface-900);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
