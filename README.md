@@ -1,10 +1,10 @@
 # Clarity for Mozilla Common Voice
 
-**Clarity** is a case-grounded deliberation platform designed to transition linguistic data governance from an individualistic "notice and consent" model to a collective, stake-weighted system. By anchoring influence in real-world contributions to communities (like Mozilla Common Voice), the platform ensures that those with the highest "expressed stake" lead governance decisions.
+Clarity is a case-grounded deliberation platform designed to transition linguistic data governance from an individualistic "notice and consent" model to a collective, stake-weighted system. By anchoring influence in real-world contributions to communities (like Mozilla Common Voice), the platform ensures that those with the highest "expressed stake" lead governance decisions.
 
 ---
 
-## 🚀 Project Vision & Lifecycle
+## Project Vision & Lifecycle
 
 Traditional online voting often devolves into abstract policy debates, echo chambers, or polarized binaries. Clarity solves this through a structured, multi-phase deliberation lifecycle focused on concrete scenarios:
 
@@ -33,7 +33,7 @@ The platform treats consensus as a live, dynamic state rather than a static aver
 
 ---
 
-## 💻 Technical Architecture
+## Technical Architecture
 
 The architecture is a modern three-tier system designed for rapid iteration, AI integration, and scalable similarity searching.
 
@@ -51,7 +51,7 @@ The architecture is a modern three-tier system designed for rapid iteration, AI 
 
 ---
 
-## 🛠️ Current Project Phase: Frontend Demonstration
+## Current Project Phase: Frontend Demonstration
 
 This repository currently houses the **Frontend Demo Phase** inside the `frontend/` directory. All backend routing, Supabase connections, and AI integrations are currently mocked to showcase the UI, interaction flow, and visual architecture.
 
