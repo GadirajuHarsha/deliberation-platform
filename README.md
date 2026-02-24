@@ -38,13 +38,11 @@ The platform treats consensus as a live, dynamic state rather than a static aver
 The architecture is a modern three-tier system designed for rapid iteration, AI integration, and scalable similarity searching.
 
 ### Tech Stack
-- **Frontend:** React with Tailwind CSS (hosted on Vercel)
-- **Backend:** FastAPI / Python (deployed via Docker on AWS Lambda)
-- **Database:** Supabase (serverless PostgreSQL) + `pgvector` for similarity search
+- **Frontend:** React with Tailwind CSS (hosted on Firebase Hosting)
+- **Backend:** FastAPI / Python (deployed via Docker on Google Cloud Run)
+- **Database:** Google Cloud SQL (PostgreSQL) + `pgvector` for similarity search
 - **AI Infrastructure:**
-  - **Socratic Facilitator:** LangGraph over Llama 3 (via Groq) for rapid, lightweight conversational turns.
-  - **Consensus Synthesizer:** Claude 3.5 Sonnet (via AWS Bedrock) for heavyweight batch processing of the "Live State" consensus.
-  - **Embeddings:** Local `sentence-transformers` (`all-MiniLM-L6-v2`) inside the FastAPI container to eliminate external embedding API costs.
+  - **All AI Interaction:** Vertex AI (Gemini 1.5 Pro and Gemini 1.5 Flash) powers the Socratic Facilitator, Consensus Synthesis, and all embedding generation.
 
 ### Optimization Nuances
 - **User Value Ledger:** To minimize token usage, the system passes only a distilled JSON object of "Identified Values" and "Current Stance" each turn during the Socratic Intake, rather than the full conversation history.
@@ -53,7 +51,7 @@ The architecture is a modern three-tier system designed for rapid iteration, AI 
 
 ## Current Project Phase: Frontend Demonstration
 
-This repository currently houses the **Frontend Demo Phase** inside the `frontend/` directory. All backend routing, Supabase connections, and AI integrations are currently mocked to showcase the UI, interaction flow, and visual architecture.
+This repository currently houses the **Frontend Demo Phase** inside the `frontend/` directory. All backend routing, Cloud SQL connections, and AI integrations are currently mocked to showcase the UI, interaction flow, and visual architecture.
 
 To run the frontend demonstration locally:
 
