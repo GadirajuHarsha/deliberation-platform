@@ -13,10 +13,10 @@ export default function Navbar() {
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                                 <div className="flex justify-between h-16">
                                         <div className="flex">
-                                                <Link to="/cases" className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity gap-2 py-2">
+                                                <Link to="/cases" className="flex-shrink-0 flex items-center hover:opacity-80 transition-opacity gap-1.5 py-2">
                                                         <Mic className="h-7 w-7 text-primary-600" />
-                                                        <div className="flex items-baseline gap-2">
-                                                                <span className="font-sans font-bold text-2xl text-black tracking-tight leading-none">Clarity</span>
+                                                        <div className="flex items-baseline gap-1.5">
+                                                                <span className="font-sans font-bold text-2xl text-surface-700 tracking-tight leading-none">Clarity</span>
                                                                 <span className="text-base font-medium text-surface-500 leading-none hidden sm:block">
                                                                         for Mozilla Common Voice
                                                                 </span>

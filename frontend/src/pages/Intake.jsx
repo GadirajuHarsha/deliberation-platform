@@ -17,9 +17,9 @@ export default function Intake() {
                 }
         ]);
         const [inputValue, setInputValue] = useState('');
-        const [mockStep, setMockStep] = useState(0);
         const [clarityScore, setClarityScore] = useState(0);
-        const [identifiedValues, setIdentifiedValues] = useState([]);
+        const [isLoading, setIsLoading] = useState(false);
+        const [isMockMode, setIsMockMode] = useState(false);
         const messagesEndRef = useRef(null);
 
         const scrollToBottom = () => {
@@ -30,52 +30,69 @@ export default function Intake() {
                 scrollToBottom();
         }, [messages]);
 
-        const handleSend = () => {
+        const handleSend = async () => {
                 if (!inputValue.trim()) return;
 
-                const newUserMsg = { id: Date.now(), role: 'user', content: inputValue };
+                const userMsg = inputValue;
+                const newUserMsg = { id: Date.now(), role: 'user', content: userMsg };
                 setMessages(prev => [...prev, newUserMsg]);
                 setInputValue('');
 
-                const currentStep = mockStep;
-                setMockStep(prev => prev + 1);
+                setIsLoading(true);
 
-                // Mock Socratic Logic with Clarity Fluctuations
-                setTimeout(() => {
-                        if (currentStep === 0) {
+                if (isMockMode) {
+                        // Simulate a brief AI delay before the mock response
+                        setTimeout(() => {
                                 setMessages(prev => [...prev, {
                                         id: Date.now() + 1,
                                         role: 'agent',
-                                        content: "I understand you support keeping the data completely non-commercial. But what if a startup is building an open-source medical transcription tool and needs commercial viability to survive? Would you grant an exception for 'public good' commercial use?"
+                                        content: "This is a sample mocked response to demonstrate the UI flow without the backend running. In a real scenario, the Socratic Facilitator would challenge your assumption here."
                                 }]);
-                                setIdentifiedValues(['Non-commercial strictness']);
-                                setClarityScore(45);
-                        } else if (currentStep === 1) {
-                                setMessages(prev => [...prev, {
-                                        id: Date.now() + 1,
-                                        role: 'agent',
-                                        content: "Thank you for clarifying your boundary. It seems you value 'Public Good' over a strict 'No-Commercial' rule. Your stance has reached sufficient clarity to proceed, though you can continue to refine it."
-                                }]);
-                                setIdentifiedValues(['Public Good Priority', 'Regulated Commercial Use']);
-                                setClarityScore(85);
-                        } else if (currentStep === 2) {
-                                setMessages(prev => [...prev, {
-                                        id: Date.now() + 1,
-                                        role: 'agent',
-                                        content: "Wait, you just introduced an interesting caveat that seems to contradict your earlier 'Public Good' priority. Can you clarify how you would distinguish genuine public good from corporate washing?"
-                                }]);
-                                setIdentifiedValues(['Public Good Priority', 'Regulated Commercial Use', 'Definitional Tension']);
-                                setClarityScore(60); // Clarity drops!
-                        } else {
-                                setMessages(prev => [...prev, {
-                                        id: Date.now() + 1,
-                                        role: 'agent',
-                                        content: "Understood! That resolves the contradiction perfectly. Your stance is highly coherent now."
-                                }]);
-                                setIdentifiedValues(['Public Good Priority', 'Regulated Commercial Use', 'Strict Definitions']);
-                                setClarityScore(95);
-                        }
-                }, 1000);
+                                setClarityScore(prev => {
+                                        const newScore = prev + 35;
+                                        return newScore > 100 ? 100 : newScore;
+                                });
+                                setIsLoading(false);
+                        }, 1200);
+                        return;
+                }
+
+                try {
+                        // Send the message to our new FastAPI / Vertex AI backend
+                        const response = await fetch("http://127.0.0.1:8000/intake/chat", {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                        session_id: "demo-session-42",
+                                        message: userMsg
+                                })
+                        });
+
+                        const data = await response.json();
+
+                        setMessages(prev => [...prev, {
+                                id: Date.now() + 1,
+                                role: 'agent',
+                                content: data.reply
+                        }]);
+
+                        // For this MVP step, we will still simulate the clarity score climbing
+                        // based on the number of turns until we wire up the full Values Extraction chain.
+                        setClarityScore(prev => {
+                                const newScore = prev + 35;
+                                return newScore > 100 ? 100 : newScore;
+                        });
+
+                } catch (error) {
+                        console.error("Failed to connect to backend", error);
+                        setMessages(prev => [...prev, {
+                                id: Date.now() + 1,
+                                role: 'agent',
+                                content: "[Connection Error] Make sure the FastAPI backend is running on port 8000."
+                        }]);
+                } finally {
+                        setIsLoading(false);
+                }
         };
 
         return (
@@ -92,7 +109,16 @@ export default function Intake() {
                                                         <ArrowLeft className="h-5 w-5" />
                                                 </button>
                                                 <div>
-                                                        <h2 className="font-semibold text-surface-900">Socratic Facilitator</h2>
+                                                        <h2 className="font-semibold text-surface-900 flex items-center gap-2">
+                                                                Socratic Facilitator
+                                                                <button
+                                                                        onClick={() => setIsMockMode(!isMockMode)}
+                                                                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors border ${isMockMode ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-primary-100 text-primary-700 border-primary-200'}`}
+                                                                        title={isMockMode ? "Currently using mocked responses for easy UI demoing" : "Currently connected to live Gemini AI backend"}
+                                                                >
+                                                                        {isMockMode ? "Frontend Sample Mode" : "Backend Linked Mode"}
+                                                                </button>
+                                                        </h2>
                                                         <p className="text-xs text-surface-500">Refining your position on Case #42</p>
                                                 </div>
                                         </div>
@@ -116,6 +142,23 @@ export default function Intake() {
                                                         </div>
                                                 </div>
                                         ))}
+
+                                        {/* Loading Animation */}
+                                        {isLoading && (
+                                                <div className="flex justify-start">
+                                                        <div className="flex items-start max-w-[80%] flex-row">
+                                                                <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-surface-100 mr-3">
+                                                                        <Bot className="h-4 w-4 text-surface-600" />
+                                                                </div>
+                                                                <div className="rounded-2xl px-4 py-3 text-sm shadow-sm bg-surface-100 text-surface-900 rounded-tl-none border border-surface-200 flex items-center gap-1">
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        )}
+
                                         <div ref={messagesEndRef} />
                                 </div>
 
@@ -167,17 +210,7 @@ export default function Intake() {
                                                 <CheckCircle2 className="h-4 w-4 text-primary-600 mr-2" />
                                                 Identified Values
                                         </h3>
-                                        {identifiedValues.length === 0 ? (
-                                                <p className="text-sm text-surface-500 italic">Chat with the agent to extract your core values.</p>
-                                        ) : (
-                                                <ul className="space-y-2">
-                                                        {identifiedValues.map((val, idx) => (
-                                                                <li key={idx} className="bg-primary-50 border border-primary-100 text-primary-800 text-sm px-3 py-2 rounded-md font-medium shadow-sm">
-                                                                        {val}
-                                                                </li>
-                                                        ))}
-                                                </ul>
-                                        )}
+                                        <p className="text-sm text-surface-500 italic">Chat with the agent to extract your core values.</p>
                                 </div>
 
                                 {clarityScore >= 80 && (
