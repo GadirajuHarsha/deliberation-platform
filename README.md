@@ -49,15 +49,25 @@ The architecture is a modern three-tier system designed for rapid iteration, AI 
 
 ---
 
-## Current Project Phase: Frontend Demonstration
+## Current Developer Phase: Backend MVP Integration
 
-This repository currently houses the **Frontend Demo Phase** inside the `frontend/` directory. All backend routing, Cloud SQL connections, and AI integrations are currently mocked to showcase the UI, interaction flow, and visual architecture.
+This repository currently houses the **Interactive Intake Demo Phase**. The frontend React UI (`frontend/`) is securely hooked up to a live FastAPI python backend (`backend/`) which brokers communication with Google's Socratic AI models. Both components can be launched locally for immediate testing or demoing.
 
-To run the frontend demonstration locally:
+### 🚀 How to Run Locally
 
-1. Navigate to the frontend directory: `cd frontend`
-2. Install dependencies: `npm install`
-3. Start the Vite server: `npm run dev`
-4. Open your browser and navigate to `http://localhost:5173/`
+You can launch both the frontend and backend servers simultaneously using the provided root startup script.
+
+1. Ensure you have Node.js and Python installed.
+2. In the `backend` directory, create a `.env` file and add your Google AI Studio API key (this file is gitignored to protect your credentials when sharing the repository):
+   ```env
+   GEMINI_API_KEY="your_api_key_here"
+   ```
+3. From the project root, simply double click the **`start.bat`** file, or run it in your terminal:
+   ```bash
+   .\start.bat
+   ```
+   *This will automatically activate your virtual environment, launch Uvicorn on `localhost:8000`, and launch the Vite dev server on `localhost:5173`.*
+
+> **UI Mock Mode Toggle:** If you wish to share the frontend with a non-technical stakeholder or review the platform without configuring the `.env` AI keys, simply use the `Frontend Sample Mode / Backend Linked Mode` toggle located right above the Socratic chat UI to force the system to return mocked JSON responses rather than live model queries!
 
 *© 2026. Developed at The University of Texas at Austin.*
