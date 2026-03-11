@@ -1,8 +1,12 @@
 # Clarity for Mozilla Common Voice
 
-## Current Developer Phase: Backend MVP Integration
+## Current Status: Live MVP
 
-This repository currently houses the **Interactive Intake Demo Phase**. The frontend React UI (`frontend/`) is securely hooked up to a live FastAPI python backend (`backend/`) which brokers communication with Google's Socratic AI models. Both components can be launched locally for immediate testing or demoing.
+The interactive Socratic Intake platform is now deployed and live on Google Cloud:
+- **Frontend (Firebase Hosting):** [https://project-0582302d-40e8-4c33-95f.web.app/](https://project-0582302d-40e8-4c33-95f.web.app/)
+- **Backend (Cloud Run):** [https://clarity-backend-vldn7akxra-uc.a.run.app/](https://clarity-backend-vldn7akxra-uc.a.run.app/)
+
+The frontend React UI (`frontend/`) is securely hooked up to the FastAPI python backend (`backend/`) which brokers communication with Google's Socratic AI models. Both components can also be launched locally for immediate testing or demoing.
 
 ### 🚀 How to Run Locally
 

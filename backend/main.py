@@ -11,8 +11,8 @@ app = FastAPI(title="Clarity Backend API")
 # Setup CORS for the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -27,6 +27,8 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    clarity_score: int
+    extracted_values: list[str]
 
 @app.get("/", response_model=HealthResponse)
 def read_root():
@@ -42,8 +44,16 @@ def intake_chat(req: ChatRequest):
     from llm_service import send_message
     
     try:
-        reply = send_message(req.session_id, req.message)
-        return {"reply": reply}
+        data = send_message(req.session_id, req.message)
+        return {
+            "reply": data.get("reply", "Failed to parse reply"),
+            "clarity_score": data.get("clarity_score", 0),
+            "extracted_values": data.get("extracted_values", [])
+        }
     except Exception as e:
         # If GCP isn't authenticated yet, this will throw an error. We return it cleanly.
-        return {"reply": f"[System Error: Vertex AI failed to respond. {str(e)}]"}
+        return {
+            "reply": f"[System Error: Vertex AI failed to respond. {str(e)}]",
+            "clarity_score": 0,
+            "extracted_values": []
+        }

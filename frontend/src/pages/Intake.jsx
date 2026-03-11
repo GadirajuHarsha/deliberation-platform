@@ -13,11 +13,12 @@ export default function Intake() {
                 {
                         id: 1,
                         role: 'agent',
-                        content: "Welcome to Case #42: Commercial Use of Voice Data. Should we allow for-profit companies to train their proprietary models on our public voice datasets? Please share your initial stance."
+                        content: "Welcome to Case #42: Commercial Use of Voice Data. As a member of The Kinyarwanda Language Resource Group, should we allow for-profit companies to train their proprietary models on our public voice datasets? Please share your initial stance."
                 }
         ]);
         const [inputValue, setInputValue] = useState('');
         const [clarityScore, setClarityScore] = useState(0);
+        const [identifiedValues, setIdentifiedValues] = useState([]);
         const [isLoading, setIsLoading] = useState(false);
         const [isMockMode, setIsMockMode] = useState(false);
         const messagesEndRef = useRef(null);
@@ -52,6 +53,7 @@ export default function Intake() {
                                         const newScore = prev + 35;
                                         return newScore > 100 ? 100 : newScore;
                                 });
+                                setIdentifiedValues(["Data Privacy", "Informed Consent"]);
                                 setIsLoading(false);
                         }, 1200);
                         return;
@@ -59,7 +61,7 @@ export default function Intake() {
 
                 try {
                         // Send the message to our new FastAPI / Vertex AI backend
-                        const response = await fetch("http://127.0.0.1:8000/intake/chat", {
+                        const response = await fetch("https://clarity-backend-vldn7akxra-uc.a.run.app/intake/chat", {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
@@ -76,12 +78,11 @@ export default function Intake() {
                                 content: data.reply
                         }]);
 
-                        // For this MVP step, we will still simulate the clarity score climbing
-                        // based on the number of turns until we wire up the full Values Extraction chain.
-                        setClarityScore(prev => {
-                                const newScore = prev + 35;
-                                return newScore > 100 ? 100 : newScore;
-                        });
+                        // Use the real clarity score and extracted values from the LLM
+                        setClarityScore(data.clarity_score || 0);
+                        if (data.extracted_values && data.extracted_values.length > 0) {
+                                setIdentifiedValues(data.extracted_values);
+                        }
 
                 } catch (error) {
                         console.error("Failed to connect to backend", error);
@@ -151,9 +152,9 @@ export default function Intake() {
                                                                         <Bot className="h-4 w-4 text-surface-600" />
                                                                 </div>
                                                                 <div className="rounded-2xl px-4 py-3 text-sm shadow-sm bg-surface-100 text-surface-900 rounded-tl-none border border-surface-200 flex items-center gap-1">
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full typing-dot"></div>
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
                                                                 </div>
                                                         </div>
                                                 </div>
@@ -164,13 +165,24 @@ export default function Intake() {
 
                                 <div className="p-4 bg-white border-t border-surface-100">
                                         <div className="flex items-center gap-2">
-                                                <input
-                                                        type="text"
+                                                <textarea
+                                                        ref={(el) => {
+                                                                if (el) {
+                                                                        el.style.height = 'auto';
+                                                                        el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+                                                                }
+                                                        }}
                                                         value={inputValue}
                                                         onChange={(e) => setInputValue(e.target.value)}
-                                                        onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                                                        placeholder="Type your response to continue refining..."
-                                                        className="flex-1 rounded-lg border-surface-200 bg-surface-50 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                                        onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                                        e.preventDefault();
+                                                                        handleSend();
+                                                                }
+                                                        }}
+                                                        placeholder="Type your response to continue refining (Shift+Enter for newline)..."
+                                                        className="flex-1 rounded-lg border-surface-200 bg-surface-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto min-h-[44px]"
+                                                        rows={1}
                                                 />
                                                 <button
                                                         onClick={handleSend}
@@ -210,7 +222,17 @@ export default function Intake() {
                                                 <CheckCircle2 className="h-4 w-4 text-primary-600 mr-2" />
                                                 Identified Values
                                         </h3>
-                                        <p className="text-sm text-surface-500 italic">Chat with the agent to extract your core values.</p>
+                                        {identifiedValues.length === 0 ? (
+                                                <p className="text-sm text-surface-500 italic">Chat with the agent to extract your core values.</p>
+                                        ) : (
+                                                <div className="flex flex-wrap gap-2">
+                                                        {identifiedValues.map((val, idx) => (
+                                                                <span key={idx} className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-surface-100 text-surface-800 border border-surface-200">
+                                                                        {val}
+                                                                </span>
+                                                        ))}
+                                                </div>
+                                        )}
                                 </div>
 
                                 {clarityScore >= 80 && (
