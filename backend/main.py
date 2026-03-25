@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -24,6 +25,7 @@ class HealthResponse(BaseModel):
 class ChatRequest(BaseModel):
     session_id: str
     message: str
+    case_context: Optional[str] = None
 
 class ChatResponse(BaseModel):
     reply: str
@@ -44,7 +46,7 @@ def intake_chat(req: ChatRequest):
     from llm_service import send_message
     
     try:
-        data = send_message(req.session_id, req.message)
+        data = send_message(req.session_id, req.message, req.case_context)
         return {
             "reply": data.get("reply", "Failed to parse reply"),
             "clarity_score": data.get("clarity_score", 0),

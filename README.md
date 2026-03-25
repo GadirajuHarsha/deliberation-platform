@@ -62,18 +62,32 @@ The platform treats consensus as a live, dynamic state rather than a static aver
 
 ## Technical Architecture
 
-The architecture is a modern three-tier system designed for rapid iteration, AI integration, and scalable similarity searching.
+The architecture is a modern three-tier system designed for rapid iteration, modularity, and $0 sustainable hosting.
 
 ### Tech Stack
-- **Frontend:** React with Tailwind CSS (hosted on Firebase Hosting)
-- **Backend:** FastAPI / Python (deployed via Docker on Google Cloud Run)
-- **Database:** Google Cloud SQL (PostgreSQL) + `pgvector` for similarity search
-- **AI Infrastructure:**
-  - **All AI Interaction:** Vertex AI (Gemini 1.5 Pro and Gemini 1.5 Flash) powers the Socratic Facilitator, Consensus Synthesis, and all embedding generation.
+- **Frontend:** React with Tailwind CSS, secured by **Firebase Authentication**.
+- **Backend:** FastAPI / Python (deployed via Docker on Google Cloud Run).
+- **Database:** **SQLite via SQLAlchemy ORM**. 
+  - *Note: To maintain a zero-cost infrastructure, the platform targets a local SQLite file which is dynamically mounted via Google Cloud Storage FUSE volumes on Cloud Run instead of expensive PostgreSQL instances.*
+- **AI Infrastructure:** Vertex AI (Gemini 2.5 Flash) powers the Socratic Facilitator, the AI Case Synthesizer, and the deliberation pipeline.
 
-### Optimization Nuances
-- **User Value Ledger:** To minimize token usage, the system passes only a distilled JSON object of "Identified Values" and "Current Stance" each turn during the Socratic Intake, rather than the full conversation history.
+---
 
+## 🚀 v2 Platform Upgrades (Recent Implementations)
 
+The following major features were recently engineered to transition the platform from a theoretical wireframe into a fully-functional MVP:
+
+0. Added a new sample case about dataset licensing
+1. **Quadratic Voting Interface:** Replaced binary thumbs-up/down voting with a dynamic range slider that visually calculates and deducts the quadratic cost ($Cost = Votes^2$) from the user's available Civic Credit Pool.
+2. **Forced Peer-Perspective Review:** Engineered a timer-locked `Review.jsx` component that forces users to spend at least 30 seconds reading adversarial viewpoints before allowing them to vote, algorithmically reducing echo chambers. - basically, emphasizing peer perspectives more befoore the voting stage based on what we read in the papers
+3. **SQLite Cloud Persistence:** Re-architected the Python `llm_service.py` to strip away volatile memory sessions. Trancripts, Clarity Scores, and Identified Values are now securely read from and written to a Google Cloud Storage-mounted `clarity.db` SQLite schema.
+4. **Socratic Quota Tuning:** Implemented a "Ghost Prompt" interceptor. The model generously increases clarity metrics when the user provides rationale, but is hard-coded to intercept at precisely the 6th user-exchange to forcefully conclude the debate and assign an 80+ score, preventing endless conversational loops. - this probably needs to be tuned more to not be a hard boundary and just act "more aggressively" when nearing the boundary, because a hard boundary means that incomplete perspectives might proceed prematurely.
+5. **Firebase Auth & Customization:** Protected the deliberation routes utilizing `AuthContext`. Built out the new `Profile.jsx` civic dashboard and the `CreateCase.jsx` portal allowing community leads to automatically synthesize abstract topics into concrete policy cases using AI. Currently not connected to an actual authentication API for demo/testing purposes.
+6. Decided against having a marker showing your "rank" within the community/the weight of your voice because I felt like it would discourage people from participating if they're "ranked lower" within their own community, and I think the most important thing with a deliberation platform (from my perspective) is to have as much participation as possible, even if the benefit could be that people distribute their votes more broadly when they have a lot of credits to be used/if they're highly ranked.
+
+### ❓ Open Questions for Advisor / Professor
+- **Database Scaling Strategy:** *The platform currently operates a local SQLite ledger dynamically mounted to Google Cloud Storage FUSE. This achieves a sustainable $0 cost model ideal for the MVP. Going forward, should we maintain this high-efficiency architecture, or begin allocating research funds for dedicated, high-concurrency PostgreSQL instances (like Google Cloud SQL or Supabase) to support mass traffic?*
+
+- TBD: Figuring out how to get data on contributions from Mozilla Common Voice. Possible API to use based on if there is relevant data to be used from it?: https://datacollective.mozillafoundation.org/api-reference
 
 *© 2026. Developed at The University of Texas at Austin.*

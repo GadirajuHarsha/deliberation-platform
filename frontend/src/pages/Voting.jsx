@@ -46,38 +46,40 @@ export default function Voting() {
                                                 You have finalized your stance: <span className="italic font-medium text-surface-900">"Allow commercial use only for public good software, enforce strict limitations on proprietary corporate models."</span>
                                         </p>
 
-                                        <div className="bg-primary-50 rounded-lg p-6 border border-primary-100 flex flex-col items-center">
-                                                <h3 className="font-semibold text-primary-900 mb-4">Allocate Influence</h3>
+                                        <div className="bg-primary-50 rounded-lg p-6 border border-primary-100 flex flex-col items-center shadow-sm">
+                                                <h3 className="font-bold text-primary-900 mb-6 text-lg">Allocate Quadratic Votes</h3>
 
-                                                <div className="flex items-center gap-6 mb-6">
-                                                        <button
-                                                                onClick={() => handleVoteChange(Math.max(0, votes - 1))}
-                                                                className="p-3 bg-white text-surface-700 rounded-full shadow hover:bg-surface-50 transition-colors"
-                                                                disabled={votes <= 0}
-                                                        >
-                                                                <ThumbsDown className="h-6 w-6" />
-                                                        </button>
+                                                <div className="text-center mb-8">
+                                                        <span className="text-6xl font-black text-primary-600 tracking-tighter drop-shadow-sm">{votes}</span>
+                                                        <span className="block text-sm font-bold text-primary-800 uppercase tracking-wider mt-2">Votes Cast</span>
+                                                </div>
 
-                                                        <div className="text-center w-24">
-                                                                <span className="text-5xl font-black text-primary-600 tracking-tighter">{votes}</span>
-                                                                <span className="block text-sm font-medium text-primary-800 uppercase tracking-wide mt-1">Votes</span>
+                                                <div className="flex items-center gap-4 mb-8 w-full max-w-md">
+                                                        <span className="text-base font-bold text-surface-400">0</span>
+                                                        <input 
+                                                                type="range" 
+                                                                min="0" 
+                                                                max={Math.floor(Math.sqrt(availableCredits))} 
+                                                                value={votes} 
+                                                                onChange={(e) => handleVoteChange(parseInt(e.target.value))}
+                                                                className="w-full h-3 bg-surface-300 rounded-lg appearance-none cursor-pointer accent-primary-600 shadow-inner"
+                                                        />
+                                                        <span className="text-base font-bold text-surface-400">{Math.floor(Math.sqrt(availableCredits))}</span>
+                                                </div>
+
+                                                {/* Visual Credit Pool Bar */}
+                                                <div className="w-full max-w-md bg-white p-4 rounded-xl shadow-sm border border-surface-200">
+                                                        <div className="flex justify-between text-sm mb-2">
+                                                                <span className="font-bold text-surface-700">Credit Pool ({availableCredits})</span>
+                                                                <span className="font-bold text-red-500">-{cost} Cost</span>
                                                         </div>
-
-                                                        <button
-                                                                onClick={() => handleVoteChange(votes + 1)}
-                                                                className="p-3 bg-white text-surface-700 rounded-full shadow hover:bg-surface-50 transition-colors"
-                                                        >
-                                                                <ThumbsUp className="h-6 w-6" />
-                                                        </button>
-                                                </div>
-
-                                                <div className="w-full max-w-xs bg-surface-200 rounded-full h-2.5 mb-2">
-                                                        <div className="bg-primary-600 h-2.5 rounded-full" style={{ width: `${Math.min(100, (cost / availableCredits) * 100)}%` }}></div>
-                                                </div>
-
-                                                <div className="flex justify-between w-full max-w-xs text-sm mt-4">
-                                                        <span className="text-surface-600 font-medium">Cost: <span className="text-surface-800 font-bold">{cost}</span> Credits</span>
-                                                        <span className="text-surface-600 font-medium">Remaining: <span className="text-primary-700 font-bold">{availableCredits - cost}</span> Credits</span>
+                                                        <div className="w-full bg-surface-100 rounded-full h-4 overflow-hidden flex shadow-inner">
+                                                                <div className="bg-primary-500 h-full transition-all duration-300 ease-out" style={{ width: `${((availableCredits - cost) / availableCredits) * 100}%` }}></div>
+                                                                <div className="bg-red-400 h-full transition-all duration-300 ease-out" style={{ width: `${(cost / availableCredits) * 100}%` }}></div>
+                                                        </div>
+                                                        <div className="flex justify-end text-sm mt-3">
+                                                                <span className="font-bold text-surface-900 bg-surface-100 px-3 py-1 rounded-md">{availableCredits - cost} Remaining</span>
+                                                        </div>
                                                 </div>
                                         </div>
 

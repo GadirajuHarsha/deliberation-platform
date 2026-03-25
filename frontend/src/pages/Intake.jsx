@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart, Loader2 } from 'lucide-react';
 
 /**
  * Manages the Socratic Intake Phase.
@@ -9,19 +9,47 @@ import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart } from 'lucide-react
  */
 export default function Intake() {
         const navigate = useNavigate();
-        const [messages, setMessages] = useState([
-                {
+        const location = useLocation();
+
+        const selectedCase = location.state?.selectedCase || {
+                id: 60,
+                title: "Dataset Licensing Review",
+                description: "The current dataset is released under CC0. What license would you like the dataset to be licensed under moving forward (e.g., CC-BY, CC-BY-NC, or a Custom Governance model)? And how should this transition impact previously collected data?"
+        };
+
+        const initialBotMessage = `Welcome to Case #${selectedCase.id}: ${selectedCase.title}. As a member of The Kinyarwanda Language Resource Group, ${selectedCase.description.charAt(0).toLowerCase() + selectedCase.description.slice(1)} Please share your initial stance and why.`;
+
+        const [messages, setMessages] = useState(() => {
+                const cached = sessionStorage.getItem(`intake_messages_demo_${selectedCase.id}`);
+                if (cached) return JSON.parse(cached);
+                return [{
                         id: 1,
                         role: 'agent',
-                        content: "Welcome to Case #42: Commercial Use of Voice Data. As a member of The Kinyarwanda Language Resource Group, should we allow for-profit companies to train their proprietary models on our public voice datasets? Please share your initial stance."
-                }
-        ]);
+                        content: initialBotMessage
+                }];
+        });
+
         const [inputValue, setInputValue] = useState('');
-        const [clarityScore, setClarityScore] = useState(0);
-        const [identifiedValues, setIdentifiedValues] = useState([]);
+        
+        const [clarityScore, setClarityScore] = useState(() => {
+                const cached = sessionStorage.getItem(`intake_score_demo_${selectedCase.id}`);
+                return cached ? JSON.parse(cached) : 0;
+        });
+
+        const [identifiedValues, setIdentifiedValues] = useState(() => {
+                const cached = sessionStorage.getItem(`intake_values_demo_${selectedCase.id}`);
+                return cached ? JSON.parse(cached) : [];
+        });
+
         const [isLoading, setIsLoading] = useState(false);
         const [isMockMode, setIsMockMode] = useState(false);
         const messagesEndRef = useRef(null);
+
+        useEffect(() => {
+                sessionStorage.setItem(`intake_messages_demo_${selectedCase.id}`, JSON.stringify(messages));
+                sessionStorage.setItem(`intake_score_demo_${selectedCase.id}`, JSON.stringify(clarityScore));
+                sessionStorage.setItem(`intake_values_demo_${selectedCase.id}`, JSON.stringify(identifiedValues));
+        }, [messages, clarityScore, identifiedValues, selectedCase.id]);
 
         const scrollToBottom = () => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -65,8 +93,9 @@ export default function Intake() {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                        session_id: "demo-session-42",
-                                        message: userMsg
+                                        session_id: `demo-session-${selectedCase.id}`,
+                                        message: userMsg,
+                                        case_context: initialBotMessage
                                 })
                         });
 
@@ -120,7 +149,7 @@ export default function Intake() {
                                                                         {isMockMode ? "Frontend Sample Mode" : "Backend Linked Mode"}
                                                                 </button>
                                                         </h2>
-                                                        <p className="text-xs text-surface-500">Refining your position on Case #42</p>
+                                                        <p className="text-xs text-surface-500">Refining your position on Case #{selectedCase.id}</p>
                                                 </div>
                                         </div>
                                         {clarityScore >= 80 && (
@@ -151,10 +180,9 @@ export default function Intake() {
                                                                 <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-surface-100 mr-3">
                                                                         <Bot className="h-4 w-4 text-surface-600" />
                                                                 </div>
-                                                                <div className="rounded-2xl px-4 py-3 text-sm shadow-sm bg-surface-100 text-surface-900 rounded-tl-none border border-surface-200 flex items-center gap-1">
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                                                        <div className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                                                                <div className="rounded-2xl px-5 py-3 text-sm shadow-sm bg-surface-100 text-surface-900 rounded-tl-none border border-surface-200 flex items-center gap-2 text-surface-500">
+                                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                                        <span className="font-medium text-xs">Generating Socratic response...</span>
                                                                 </div>
                                                         </div>
                                                 </div>
@@ -238,10 +266,16 @@ export default function Intake() {
                                 {clarityScore >= 80 && (
                                         <div className="mt-6 pt-6 border-t border-surface-100">
                                                 <button
-                                                        onClick={() => navigate('/vote')}
+                                                        onClick={() => {
+                                                                if (sessionStorage.getItem('perspective_reviewed') === 'true') {
+                                                                        navigate('/vote', { state: { selectedCase } });
+                                                                } else {
+                                                                        navigate('/review', { state: { selectedCase } });
+                                                                }
+                                                        }}
                                                         className="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center"
                                                 >
-                                                        Proceed to Voting
+                                                        {sessionStorage.getItem('perspective_reviewed') === 'true' ? 'Proceed to Voting' : 'Proceed to Perspective Review'}
                                                 </button>
                                         </div>
                                 )}

@@ -5,6 +5,17 @@ import { FileText, ArrowRight, ShieldAlert, Sparkles } from 'lucide-react';
 export default function Cases() {
         const cases = [
                 {
+                        id: 60,
+                        title: "Dataset Licensing Review",
+                        description: "The current dataset is released under CC0. What license would you like the dataset to be licensed under moving forward (e.g., CC-BY, CC-BY-NC, or a Custom Governance model)? And how should this transition impact previously collected data?",
+                        status: "Active Deliberation",
+                        participants: 230,
+                        icon: FileText,
+                        color: "text-blue-600",
+                        bgColor: "bg-blue-50",
+                        borderColor: "border-blue-200"
+                },
+                {
                         id: 42,
                         title: "Commercial Use of Voice Data",
                         description: "Should we allow for-profit companies to train their proprietary models on our public voice datasets? Or should we restrict commercial use strictly to public-good or open-source ventures?",
@@ -41,11 +52,17 @@ export default function Cases() {
 
         return (
                 <div className="max-w-5xl mx-auto space-y-8">
-                        <div>
-                                <h1 className="text-3xl font-bold text-surface-900 tracking-tight">Active Cases</h1>
-                                <p className="mt-2 text-surface-600">
-                                        Select a case to begin the deliberation process. Your voting power is weighted by your dataset contributions.
-                                </p>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                        <h1 className="text-3xl font-bold text-surface-900 tracking-tight">Active Cases</h1>
+                                        <p className="mt-2 text-surface-600">
+                                                Select a case to begin the deliberation process. Your voting power is weighted by your dataset contributions.
+                                        </p>
+                                </div>
+                                <Link to="/create" className="flex items-center gap-2 bg-primary-50 text-primary-700 hover:bg-primary-100 hover:text-primary-800 px-4 py-2.5 rounded-lg text-sm font-bold border border-primary-200 shadow-sm transition-colors whitespace-nowrap">
+                                        <Sparkles className="h-4 w-4" />
+                                        Synthesize Custom Case
+                                </Link>
                         </div>
 
                         <div className="grid gap-6">
@@ -83,6 +100,7 @@ export default function Cases() {
                                                                 <div className="w-full sm:w-auto mt-4 sm:mt-0">
                                                                         <Link
                                                                                 to="/intake"
+                                                                                state={{ selectedCase: { id: c.id, title: c.title, description: c.description } }}
                                                                                 className="w-full sm:w-auto flex items-center justify-center px-6 py-3 border border-transparent text-sm font-medium rounded-lg text-white bg-surface-900 hover:bg-surface-800 transition-colors"
                                                                         >
                                                                                 Enter Socratic Intake

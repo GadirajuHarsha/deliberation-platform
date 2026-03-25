@@ -1,0 +1,100 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: 844b25bc-8fa5-466f-9d14-903b4eb9177a
+    run.googleapis.com/build-image-uri: us-central1-docker.pkg.dev/project-0582302d-40e8-4c33-95f/cloud-run-source-deploy/clarity-backend
+    run.googleapis.com/build-name: projects/177448599859/locations/us-central1/builds/844b25bc-8fa5-466f-9d14-903b4eb9177a
+    run.googleapis.com/build-source-location: gs://run-sources-project-0582302d-40e8-4c33-95f-us-central1/services/clarity-backend/1774395177.079098-ce194b29ad644d1b9a62f57897d5e765.zip#1774395177236853
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 558.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/maxScale: '3'
+    run.googleapis.com/operation-id: 03d26fe9-5275-43e3-9131-b9a53e5f239c
+    run.googleapis.com/urls: '["https://clarity-backend-177448599859.us-central1.run.app","https://clarity-backend-vldn7akxra-uc.a.run.app"]'
+    serving.knative.dev/creator: harsha.g.alt@gmail.com
+    serving.knative.dev/lastModifier: harsha.g.alt@gmail.com
+  creationTimestamp: '2026-03-09T02:28:48.549772Z'
+  generation: 3
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: clarity-backend
+  namespace: '177448599859'
+  resourceVersion: AAZNzZfvBBk
+  selfLink: /apis/serving.knative.dev/v1/namespaces/177448599859/services/clarity-backend
+  uid: a0e2db01-cbd8-4c83-88df-737163c9916e
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '3'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 558.0.0
+        run.googleapis.com/execution-environment: gen2
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: zfbabjzsih
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: PROJECT_ID
+          value: project-0582302d-40e8-4c33-95f
+        - name: LOCATION
+          value: us-central1
+        - name: GEMINI_API_KEY
+          value: AIzaSyBGyA5LTlQOTpb0xvdS4ndBtIpsBGUCjXM
+        - name: DB_DIR
+          value: /mnt/clarity-db
+        image: us-central1-docker.pkg.dev/project-0582302d-40e8-4c33-95f/cloud-run-source-deploy/clarity-backend@sha256:ac6aebaed397f329c89fe322d1e2b48da560b32d8e0917acf80628b00a09e8c3
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+        volumeMounts:
+        - mountPath: /mnt/clarity-db
+          name: db-vol
+      serviceAccountName: 177448599859-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+      volumes:
+      - csi:
+          driver: gcsfuse.run.googleapis.com
+          volumeAttributes:
+            bucketName: clarity-db-project-0582302d
+        name: db-vol
+  traffic:
+  - latestRevision: true
+    percent: 100
+status:
+  address:
+    url: https://clarity-backend-vldn7akxra-uc.a.run.app
+  conditions:
+  - lastTransitionTime: '2026-03-24T23:34:32.922137Z'
+    status: 'True'
+    type: Ready
+  - lastTransitionTime: '2026-03-24T23:34:27.962342Z'
+    status: 'True'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2026-03-24T23:34:32.877776Z'
+    status: 'True'
+    type: RoutesReady
+  latestCreatedRevisionName: clarity-backend-00003-vp6
+  latestReadyRevisionName: clarity-backend-00003-vp6
+  observedGeneration: 3
+  traffic:
+  - latestRevision: true
+    percent: 100
+    revisionName: clarity-backend-00003-vp6
+  url: https://clarity-backend-vldn7akxra-uc.a.run.app
