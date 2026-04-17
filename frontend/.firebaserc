@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "project-0582302d-40e8-4c33-95f"
+    "prod": "project-0582302d-40e8-4c33-95f",
+    "new-prod": "info-deliberation-tooling-prod",
+    "staging": "clarity-staging-344ba"
   }
 }

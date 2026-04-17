@@ -93,7 +93,7 @@ export default function Review() {
                                                         <button
                                                                 onClick={() => navigate('/vote', { state: { selectedCase } })}
                                                                 disabled={timerLeft > 0}
-                                                                className={`w-full text-white font-bold py-4 px-6 rounded-xl shadow-md transition-all flex items-center justify-center text-lg ${timerLeft > 0 ? 'bg-surface-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700'}`}
+                                                                className={`w-full font-bold py-4 px-6 rounded-xl shadow-md transition-all flex items-center justify-center text-lg ${timerLeft > 0 ? '!bg-surface-300 !text-surface-800 cursor-not-allowed opacity-80' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
                                                         >
                                                                 {timerLeft > 0 ? (
                                                                         <>

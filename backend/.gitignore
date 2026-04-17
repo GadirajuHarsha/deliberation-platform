@@ -1,4 +1,4 @@
-# Environments
+# Python
 .env
 .venv
 env/
@@ -11,3 +11,19 @@ venv.bak/
 __pycache__/
 *.py[cod]
 *$py.class
+
+# SQLite databases — never commit live data
+*.db
+*.sqlite
+*.sqlite3
+
+# Cloud Run / GCP deployment artifacts — may contain secrets or project-specific config
+service.yaml
+service_updated.yaml
+deploy.log
+errors.txt
+errors2.txt
+update_yaml.py
+
+# Local scratch files
+placeholder.txt

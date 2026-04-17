@@ -12,47 +12,92 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const APP_MODE = import.meta.env.VITE_APP_MODE || 'auth';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
   useEffect(() => {
-    const mockUser = sessionStorage.getItem('mockUser');
-    if (mockUser) {
-      setCurrentUser(JSON.parse(mockUser));
-      setLoading(false);
-      return;
+    // Session restoration
+    const savedUser = sessionStorage.getItem('clarityUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    } else if (APP_MODE === 'demo') {
+      // Auto-login Curator for Demo Mode
+      const demoUser = { 
+        email: 'curator@example.com', 
+        uid: 'demo-curator',
+        role: 'developer',
+        community_id: 'global',
+        credits: 1000
+      };
+      setCurrentUser(demoUser);
+      sessionStorage.setItem('clarityUser', JSON.stringify(demoUser));
     }
+    setLoading(false);
+  }, [APP_MODE]);
+
+  const login = async (email, password) => {
+    if (APP_MODE === 'demo') return { status: 'success' };
 
     try {
-      const unsubscribe = onAuthStateChanged(auth, user => {
-        setCurrentUser(user);
-        setLoading(false);
-      }, (error) => {
-        console.warn("Firebase Auth Warning (Expected if using mock keys):", error);
-        setLoading(false);
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
       });
-      return unsubscribe;
-    } catch (e) {
-      console.warn("Firebase initialization failed. Continuing without auth state.", e);
-      setLoading(false);
+      const data = await response.json();
+      if (data.status === 'success') {
+        setCurrentUser(data.user);
+        sessionStorage.setItem('clarityUser', JSON.stringify(data.user));
+        return data;
+      }
+      return { error: data.error || 'Login failed' };
+    } catch (err) {
+      console.error("Login Error:", err);
+      return { error: `Server Error: ${err.message}` };
     }
-  }, []);
-
-  const loginAsDemo = (email) => {
-    const user = { email: email || 'demo@example.com', uid: 'demo-user-123' };
-    setCurrentUser(user);
-    sessionStorage.setItem('mockUser', JSON.stringify(user));
   };
 
-  const logoutDemo = async () => {
-    sessionStorage.removeItem('mockUser');
-    setCurrentUser(null);
+  const signup = async (email, password) => {
     try {
-      await signOut(auth);
-    } catch (e) {}
+      const response = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await response.json();
+      if (data.status === 'success') {
+        setCurrentUser(data.user);
+        sessionStorage.setItem('clarityUser', JSON.stringify(data.user));
+        return data;
+      }
+      return { error: data.error || 'Signup failed' };
+    } catch (err) {
+      console.error("Signup Error:", err);
+      return { error: `Server Error: ${err.message}` };
+    }
+  };
+
+  const logout = () => {
+    sessionStorage.removeItem('clarityUser');
+    setCurrentUser(null);
+  };
+
+  const updateUser = (updates) => {
+    setCurrentUser(prev => {
+        if (!prev) return null;
+        const newObj = { ...prev, ...updates };
+        sessionStorage.setItem('clarityUser', JSON.stringify(newObj));
+        return newObj;
+    });
   };
 
   const value = {
     currentUser,
-    loginAsDemo,
-    logoutDemo
+    login,
+    signup,
+    logout,
+    updateUser,
+    appMode: APP_MODE
   };
 
   return (

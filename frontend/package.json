@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build:live": "vite build --mode live",
+    "build:demo": "vite build --mode demo",
+    "deploy:prod": "npm run build:demo && npx --yes firebase-tools deploy --project prod --only hosting",
+    "deploy:staging": "npm run build:live && npx --yes firebase-tools deploy --project staging --only hosting",
     "lint": "eslint .",
     "preview": "vite preview"
   },

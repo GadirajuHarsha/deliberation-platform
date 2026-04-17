@@ -1,0 +1,47 @@
+Design Document: Stake-weighted Case-grounded Deliberation Platform
+
+1. Project Vision
+The platform is designed to transition linguistic data governance from an individualistic "notice and consent" model to a collective, stake-weighted deliberation system. By anchoring influence in real-world contributions to Mozilla Common Voice, the platform ensures that those with the highest "expressed stake" in the dataset lead the governance.
+
+2. System Architecture
+The architecture is a three-tier system: an Intake Layer, Voting Layer, and Audit Layer.
+
+2.1: Socratic Intake: To ensure high-integrity deliberation, the platform utilizes an asynchronous Socratic LLM agent. This agent serves as a cognitive partner and final commitment point for the user to refine their stance before seeing the spread of opinions.
+Position Hardening: The LLM agent requests the user's initial stance and performs Boundary Negotiation. It presents "what-if" scenarios and contradictory perspectives derived from other participants to ensure the user’s contribution is unique and robust.
+Values Elicitation: The agent identifies and records core values (e.g., "Linguistic Diversity," "Commercial Non-Exploitation").
+Contradiction Prodding: If a user’s stance on a case conflicts with their stored values, the agent prods for justification. The user must either change their mind to adhere to their values or defend the contradiction (after which the agent will update their stored values).
+
+2.2: Weighted Quadratic Voting: After Socratic dialogue, the user’s stance is finalized and locked. They enter the voting phase where they can allocate their granted credits however they see fit to support/emphasize their or other users’ perspectives.
+Influence Allocation: Users receive a number of credits calculated by the quantity and quality of their verified Mozilla Common Voice contributions.
+Quadratic Vote: Users spend credits to support their own position or those of others, but their credits have diminishing returns when used on individual stances (cost = votes^2). This prevents people with large stakes from dominating every single topic while still allowing them to signal high intensity on specific cases if they desire.
+Similarity Sorting: Peer perspectives are displayed in a feed ordered by decreasing similarity to the user's own refined stance.
+
+2.3: Audit Layer: The platform does not treat consensus as a static average. Instead, the LLM actively maintains and updates the Community Consensus as a live state, while keeping an audit log of all updates for transparency.
+Dynamic Consensus Maintenance: When a user supports a position, the "Consensus" of the case is recalculated. This accounts for shifts in public opinion, stake-weighting, and a Rationale Synthesis Summary that reflects the reasoned justifications collected during the Socratic phase.
+State Management: The system maintains a ledger of every unique position, its quadratic weight, a history of "Position vs. Value" contradictions for auditability, and the current synthesized community agreement alongside the raw data for transparency.
+
+3. Case Lifecycle and Management
+The "case" is the atomic unit of the platform. Instead of abstract policy debates, users deliberate on concrete, case-grounded scenarios.
+
+3.1: Case Generation: Cases enter the system through two primary channels:
+User-Proposed Cases: Any participant can upload a scenario. To prevent redundancy, the user must engage in a brief Socratic review where the agent compares the proposal against the current case library. If there is a similar case, the user must justify the uniqueness or significance of their case compared to those already present in the pool.
+LLM-Generated Provocations: The system analyzes existing abstract rules (like "No commercial use") and generates "provocations" (edge-case scenarios that test the boundaries of those rules) to proactively identify policy gaps.
+
+3.2: Case Resolution: A case is "resolved" once it meets a specific stake-weighted threshold or hits a time limit. If the community consensus on a concrete case contradicts a high-level platform policy, the system triggers a misalignment alert, forcing a revision thread where the community must update the abstract policy to reflect the case-based reality.
+Consensus conclusions are hidden until voting is complete, ensuring the consensus is built from individual reasoning rather than herd behavior.
+
+4. Technical Implementation
+
+4.1: Tech Stack
+Frontend: React with Tailwind CSS, on Firebase Hosting
+Backend: FastAPI (Python) deployed on Google Cloud Run via Docker
+Database: Google Cloud SQL (PostgreSQL) with pgvector for easy similarity search
+
+4.2: AI Infrastructure
+Socratic Facilitator: Gemini 1.5 Flash via Vertex AI; lightweight for chatting
+Consensus Synthesizer: Gemini 1.5 Pro via Vertex AI; heavyweight for batch consensus justification summaries and “Live State” updates
+Vector Embeddings: Vertex AI embeddings APIs
+
+4.3: Implementation Nuances
+"User Value Ledger": To minimize token usage, pass only a distilled JSON object of "Identified Values" and "Current Stance" each turn (not the full conversation history).
+Auditability: The system can generate a transparent audit trail through Supabase to provide data-driven proof of how the Socratic phase improved deliberative quality.

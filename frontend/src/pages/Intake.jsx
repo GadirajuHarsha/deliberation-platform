@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart, Loader2 } from 'lucide-react';
+import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart, Loader2, Timer, Unlock, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * Manages the Socratic Intake Phase.
@@ -10,6 +11,8 @@ import { Send, Bot, User, CheckCircle2, ArrowLeft, BarChart, Loader2 } from 'luc
 export default function Intake() {
         const navigate = useNavigate();
         const location = useLocation();
+        
+        const { currentUser } = useAuth();
 
         const selectedCase = location.state?.selectedCase || {
                 id: 60,
@@ -17,39 +20,31 @@ export default function Intake() {
                 description: "The current dataset is released under CC0. What license would you like the dataset to be licensed under moving forward (e.g., CC-BY, CC-BY-NC, or a Custom Governance model)? And how should this transition impact previously collected data?"
         };
 
-        const initialBotMessage = `Welcome to Case #${selectedCase.id}: ${selectedCase.title}. As a member of The Kinyarwanda Language Resource Group, ${selectedCase.description.charAt(0).toLowerCase() + selectedCase.description.slice(1)} Please share your initial stance and why.`;
-
-        const [messages, setMessages] = useState(() => {
-                const cached = sessionStorage.getItem(`intake_messages_demo_${selectedCase.id}`);
-                if (cached) return JSON.parse(cached);
-                return [{
-                        id: 1,
-                        role: 'agent',
-                        content: initialBotMessage
-                }];
-        });
-
+        const [messages, setMessages] = useState([]);
         const [inputValue, setInputValue] = useState('');
         
-        const [clarityScore, setClarityScore] = useState(() => {
-                const cached = sessionStorage.getItem(`intake_score_demo_${selectedCase.id}`);
-                return cached ? JSON.parse(cached) : 0;
-        });
-
-        const [identifiedValues, setIdentifiedValues] = useState(() => {
-                const cached = sessionStorage.getItem(`intake_values_demo_${selectedCase.id}`);
-                return cached ? JSON.parse(cached) : [];
-        });
+        const [clarityScore, setClarityScore] = useState(0);
+        const [identifiedValues, setIdentifiedValues] = useState([]);
 
         const [isLoading, setIsLoading] = useState(false);
-        const [isMockMode, setIsMockMode] = useState(false);
+        const [cooldown, setCooldown] = useState(0);
         const messagesEndRef = useRef(null);
 
+        // Global cooldown interval tracker
         useEffect(() => {
-                sessionStorage.setItem(`intake_messages_demo_${selectedCase.id}`, JSON.stringify(messages));
-                sessionStorage.setItem(`intake_score_demo_${selectedCase.id}`, JSON.stringify(clarityScore));
-                sessionStorage.setItem(`intake_values_demo_${selectedCase.id}`, JSON.stringify(identifiedValues));
-        }, [messages, clarityScore, identifiedValues, selectedCase.id]);
+                const interval = setInterval(() => {
+                        const lastTime = localStorage.getItem('last_llm_request');
+                        if (lastTime) {
+                                const passedSeconds = (Date.now() - parseInt(lastTime, 10)) / 1000;
+                                if (passedSeconds < 35) {
+                                        setCooldown(Math.ceil(35 - passedSeconds));
+                                } else {
+                                        setCooldown(0);
+                                }
+                        }
+                }, 1000);
+                return () => clearInterval(interval);
+        }, []);
 
         const scrollToBottom = () => {
                 messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -59,8 +54,32 @@ export default function Intake() {
                 scrollToBottom();
         }, [messages]);
 
+        useEffect(() => {
+                if (messages.length === 0 && !isLoading && cooldown === 0) {
+                        const initChat = async () => {
+                                setIsLoading(true);
+                                try {
+                                        // Dynamically fetch pre-generated opening context hook directly from the DB block instead of invoking Gemini!
+                                        const initialContent = selectedCase.initial_message || "As a generic member of this civic body, how do you natively frame this case context specifically?";
+                                        
+                                        // Artificial sub-second delay purely for UX transition fluidity
+                                        setTimeout(() => {
+                                                setMessages([{ id: Date.now(), role: 'agent', content: initialContent }]);
+                                                setIsLoading(false);
+                                        }, 400);
+
+                                } catch (error) {
+                                        console.error(error);
+                                        setMessages([{ id: 1, role: 'agent', content: "[Connection Error] Make sure the FastAPI backend is securely running." }]);
+                                        setIsLoading(false);
+                                }
+                        };
+                        initChat();
+                }
+        }, [messages.length, cooldown, selectedCase]);
+
         const handleSend = async () => {
-                if (!inputValue.trim()) return;
+                if (!inputValue.trim() || cooldown > 0) return;
 
                 const userMsg = inputValue;
                 const newUserMsg = { id: Date.now(), role: 'user', content: userMsg };
@@ -68,6 +87,7 @@ export default function Intake() {
                 setInputValue('');
 
                 setIsLoading(true);
+                localStorage.setItem('last_llm_request', Date.now().toString());
 
                 if (isMockMode) {
                         // Simulate a brief AI delay before the mock response
@@ -88,14 +108,15 @@ export default function Intake() {
                 }
 
                 try {
+                        const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
                         // Send the message to our new FastAPI / Vertex AI backend
-                        const response = await fetch("https://clarity-backend-vldn7akxra-uc.a.run.app/intake/chat", {
+                        const response = await fetch(`${API_URL}/intake/chat`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
                                         session_id: `demo-session-${selectedCase.id}`,
                                         message: userMsg,
-                                        case_context: initialBotMessage
+                                        case_context: `Jurisdiction: Kinyarwanda Community. Case Title: ${selectedCase.title}. Description: ${selectedCase.description}.`
                                 })
                         });
 
@@ -125,6 +146,19 @@ export default function Intake() {
                 }
         };
 
+        if (currentUser?.role === 'admin') {
+                return (
+                        <div className="max-w-3xl mx-auto py-16 text-center">
+                                <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                                <h1 className="text-3xl font-black text-surface-900 mb-2">Access Restricted</h1>
+                                <p className="text-surface-600 max-w-lg mx-auto">Administrators cannot participate in the Socratic deliberation intake. This flow is restricted exclusively to normal community constituents. Use a citizen account to proceed.</p>
+                                <button onClick={() => navigate('/admin-dashboard')} className="mt-8 bg-surface-900 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-surface-800 transition-colors">
+                                        Return to Gov Center
+                                </button>
+                        </div>
+                );
+        }
+
         return (
                 <div className="flex flex-col md:flex-row gap-6 h-[calc(100vh-8rem)]">
                         {/* Chat Interface */}
@@ -141,13 +175,6 @@ export default function Intake() {
                                                 <div>
                                                         <h2 className="font-semibold text-surface-900 flex items-center gap-2">
                                                                 Socratic Facilitator
-                                                                <button
-                                                                        onClick={() => setIsMockMode(!isMockMode)}
-                                                                        className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-colors border ${isMockMode ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-primary-100 text-primary-700 border-primary-200'}`}
-                                                                        title={isMockMode ? "Currently using mocked responses for easy UI demoing" : "Currently connected to live Gemini AI backend"}
-                                                                >
-                                                                        {isMockMode ? "Frontend Sample Mode" : "Backend Linked Mode"}
-                                                                </button>
                                                         </h2>
                                                         <p className="text-xs text-surface-500">Refining your position on Case #{selectedCase.id}</p>
                                                 </div>
@@ -173,7 +200,20 @@ export default function Intake() {
                                                 </div>
                                         ))}
 
-                                        {/* Loading Animation */}
+                                        {/* Loading Animation / Cooldown Warning */}
+                                        {cooldown > 0 && messages.length === 0 && !isLoading && (
+                                                <div className="flex justify-start">
+                                                        <div className="flex items-start max-w-[80%] flex-row">
+                                                                <div className="flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-orange-100 mr-3">
+                                                                        <Timer className="h-4 w-4 text-orange-600" />
+                                                                </div>
+                                                                <div className="rounded-2xl px-5 py-3 text-sm shadow-sm bg-orange-50 text-orange-900 border border-orange-200 flex items-center gap-2">
+                                                                        <span className="font-semibold text-xs tracking-wide">AI Quota Cooldown: Initiating sequence in {cooldown}s...</span>
+                                                                </div>
+                                                        </div>
+                                                </div>
+                                        )}
+
                                         {isLoading && (
                                                 <div className="flex justify-start">
                                                         <div className="flex items-start max-w-[80%] flex-row">
@@ -182,7 +222,7 @@ export default function Intake() {
                                                                 </div>
                                                                 <div className="rounded-2xl px-5 py-3 text-sm shadow-sm bg-surface-100 text-surface-900 rounded-tl-none border border-surface-200 flex items-center gap-2 text-surface-500">
                                                                         <Loader2 className="h-4 w-4 animate-spin" />
-                                                                        <span className="font-medium text-xs">Generating Socratic response...</span>
+                                                                        <span className="font-medium text-xs">{messages.length === 0 ? "Conversation starting..." : "Generating Socratic response..."}</span>
                                                                 </div>
                                                         </div>
                                                 </div>
@@ -208,16 +248,17 @@ export default function Intake() {
                                                                         handleSend();
                                                                 }
                                                         }}
-                                                        placeholder="Type your response to continue refining (Shift+Enter for newline)..."
-                                                        className="flex-1 rounded-lg border-surface-200 bg-surface-50 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto min-h-[44px]"
+                                                        placeholder={cooldown > 0 ? `API Cooling Down (${cooldown}s)...` : "Type your response to continue refining (Shift+Enter for newline)..."}
+                                                        className={`flex-1 rounded-lg border-surface-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none overflow-y-auto min-h-[44px] ${cooldown > 0 ? 'bg-surface-100 text-surface-400 cursor-not-allowed' : 'bg-surface-50'}`}
                                                         rows={1}
+                                                        disabled={isLoading || cooldown > 0}
                                                 />
                                                 <button
                                                         onClick={handleSend}
-                                                        disabled={!inputValue.trim()}
-                                                        className="bg-primary-600 hover:bg-primary-700 disabled:bg-surface-300 text-white p-2 rounded-lg transition-colors shadow-sm"
+                                                        disabled={!inputValue.trim() || isLoading || cooldown > 0}
+                                                        className={`p-2 rounded-lg transition-colors shadow-sm flex items-center justify-center min-w-[2.5rem] ${(!inputValue.trim() || isLoading || cooldown > 0) ? 'bg-surface-300 text-surface-500 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
                                                 >
-                                                        <Send className="h-4 w-4" />
+                                                        {cooldown > 0 ? <span className="text-xs font-bold leading-none">{cooldown}s</span> : <Send className="h-4 w-4" />}
                                                 </button>
                                         </div>
                                 </div>
@@ -279,6 +320,15 @@ export default function Intake() {
                                                 </button>
                                         </div>
                                 )}
+                                
+                                <div className="mt-4 pt-4 border-t border-purple-100">
+                                        <button
+                                                onClick={() => navigate('/vote', { state: { selectedCase } })}
+                                                className="w-full bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 py-3 px-4 rounded-lg shadow-sm transition-colors flex items-center justify-center text-sm"
+                                        >
+                                                <Unlock className="h-4 w-4 mr-2" /> Test Override: Proceed to Vote
+                                        </button>
+                                </div>
                         </div>
                 </div>
         );

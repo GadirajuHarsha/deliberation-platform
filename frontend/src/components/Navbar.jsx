@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mic, User, LogOut } from 'lucide-react';
+import { Mic, User, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
@@ -11,12 +11,12 @@ import { signOut } from 'firebase/auth';
  * Shows the user's current Common Voice credit balance or Login prompt.
  */
 export default function Navbar() {
-        const { currentUser, logoutDemo } = useAuth();
+        const { currentUser, logout } = useAuth();
         const navigate = useNavigate();
 
         const handleSignOut = async () => {
                 try {
-                        await logoutDemo();
+                        await logout();
                         navigate('/auth');
                 } catch (error) {
                         console.error('Failed to log out', error);
@@ -41,9 +41,17 @@ export default function Navbar() {
                                         <div className="flex items-center gap-4">
                                                 {currentUser ? (
                                                         <>
-                                                                <div className="flex-shrink-0 flex items-center bg-surface-50 px-3 py-1.5 rounded-full border border-surface-200 shadow-sm mr-2 hidden sm:flex">
-                                                                        <span className="text-xs font-semibold text-surface-700">600 Credits</span>
-                                                                </div>
+                                                                {currentUser.role !== 'admin' && (
+                                                                        <div className="flex-shrink-0 flex items-center bg-surface-50 px-3 py-1.5 rounded-full border border-surface-200 shadow-sm mr-2 hidden sm:flex">
+                                                                                <span className="text-xs font-semibold text-surface-700">{currentUser.credits ?? 100} Credits</span>
+                                                                        </div>
+                                                                )}
+                                                                {(currentUser.role === 'developer' || currentUser.role === 'leader' || currentUser.role === 'admin') && (
+                                                                        <Link to="/admin-dashboard" className="hidden sm:flex items-center gap-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 shadow-sm transition-colors">
+                                                                                <ShieldCheck className="h-4 w-4" />
+                                                                                Gov Center
+                                                                        </Link>
+                                                                )}
                                                                 <Link to="/profile" className="flex items-center gap-2 text-surface-600 hover:text-primary-600 transition-colors">
                                                                         <div className="bg-primary-50 p-1.5 rounded-full">
                                                                                 <User className="h-5 w-5 text-primary-600" />
@@ -52,8 +60,11 @@ export default function Navbar() {
                                                                                 {currentUser.email?.split('@')[0]}
                                                                         </span>
                                                                 </Link>
-                                                                <button onClick={handleSignOut} className="text-surface-400 hover:text-red-500 transition-colors ml-1" title="Log Out">
-                                                                        <LogOut className="h-5 w-5" />
+                                                                <button 
+                                                                        onClick={handleSignOut}
+                                                                        className="ml-2 text-sm font-bold text-red-600 hover:text-red-700 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-100"
+                                                                >
+                                                                        Log Out
                                                                 </button>
                                                         </>
                                                 ) : (
