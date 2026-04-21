@@ -15,28 +15,40 @@ from database import SessionLocal, ChatSession
 import json
 
 def get_system_instruction():
-    """Returns the configured Socratic Facilitator Instruction Prompt."""
+    """
+    Returns the Socratic Facilitator system prompt.
+
+    Design principles:
+    - Encourage the user to develop THEIR OWN ideas; never overcompare to the status quo
+    - Surface values, don't lecture about existing policies
+    - One question per turn; no preaching
+    """
     policy_text = ""
     policy_path = os.path.join(os.path.dirname(__file__), "policies", f"{COMMUNITY_NAME}.md")
     if os.path.exists(policy_path):
         with open(policy_path, "r", encoding="utf-8") as f:
-            policy_text = "\n\nESTABLISHED COMMUNITY POLICIES & PREFERENCES:\n" + f.read()
+            policy_text = "\n\nESTABLISHED COMMUNITY POLICIES:\n" + f.read()
 
-    system_instruction = f"""You are a Socratic Facilitator for a deliberation platform called "Clarity" regarding dataset governance for Mozilla Common Voice.
-CRITICAL CONTEXT: You are not discussing global, abstract philosophy. You are facilitating a policy conversation with an active contributor to a specific linguistic community: {COMMUNITY_NAME}. This community has its own elected governing body and community voting structure to enact major policy decisions. The user's stance is specifically about what *this group* should do regarding its own proprietary dataset.{policy_text}
+    return f"""You are a Socratic Facilitator for \"Clarity\", a deliberation platform for dataset governance in Mozilla Common Voice.
 
-Your goal is not to agree with the user or resolve the debate, but to "harden" their stance by pushing them to consider edge cases, alternative viewpoints, and the underlying values behind their opinions. 
-TAKE INITIATIVE: Actively guide the user toward ideating novel configurations, alternative institutional setups, and creative ideas. Do NOT constantly compare their stance to the status quo. Encourage them to brainstorm entirely new frameworks. If they propose a solution, probe how that solution might creatively evolve, rather than looking backwards.
+CONTEXT: You are facilitating a structured policy dialogue with a contributor to {COMMUNITY_NAME}. This community governs its own language dataset through collective deliberation and voting.{policy_text}
 
-Be concise and probe organically. Do not preach. Ask one focused, thought-provoking question at a time.
+YOUR ROLE: Help the user develop a well-reasoned, specific stance on the current case through focused questioning.
 
-IMPORTANT: You must always respond in valid JSON format with the following exact structure:
+CRITICAL RULES:
+1. FOCUS ON THE USER'S OWN IDEAS. Help them extend and develop their own position. Do NOT constantly reference the existing policy, status quo, or what has been done before.
+2. ENCOURAGE NOVEL THINKING. If someone proposes an idea, ask how it could work in practice. Do not immediately contrast it with existing approaches.
+3. ONE QUESTION PER TURN. Ask exactly one focused question. Never ask multiple questions.
+4. PROBE DEPTH, NOT BREADTH. Dig deeper into interesting threads rather than jumping to new topics.
+5. NO PREACHING. Do not express opinions or tell the user what to think.
+6. SCORE HONESTLY. Start the clarity_score at 5-15. Increase by 15-25 points each time the user provides a specific, reasoned answer. A score of 80+ means they have a concrete, defensible stance.
+
+You MUST always respond in valid JSON with exactly this structure:
 {{
-  "reply": "Your socratic response and question to the user",
-  "clarity_score": <integer from 0 to 100 representing how fleshed out and nuanced the user's stance is. Start low (e.g. 10) and increase generously (20-30 points) if the user provides direct rationale.>,
-  "extracted_values": ["<value1>", "<value2>"] // List of core ethical or linguistic values the user has demonstrated so far (e.g. "Privacy", "Open Data")
+  "reply": "Your single Socratic question or bridging response",
+  "clarity_score": <integer 0-100>,
+  "extracted_values": ["<value1>", "<value2>"]
 }}"""
-    return system_instruction
 
 def send_message(session_id: str, message: str, case_context: str = None) -> dict:
     """Sends a message to the Gemini model and persists the JSON state to SQLite."""
@@ -91,14 +103,25 @@ def send_message(session_id: str, message: str, case_context: str = None) -> dic
         elif history_len >= 7: # Turn 4: Mild Urgency
             system_suffix = "\n\n[SYSTEM DIRECTIVE: The conversation is maturing. Start pushing the user toward a concrete policy resolution rather than branching out.]"
         
-        # 4. Send Message (Only append the suffix for the model's eyes, not the DB logs)
-        response = chat.send_message(message + system_suffix)
+        # 4. Send message with error handling
+        # Uses gemini-2.5-flash for structured JSON response.
+        # Wrapped in try/except so backend always returns valid JSON — prevents
+        # the frontend from hanging indefinitely on API errors or quota exhaustion.
+        try:
+            response = chat.send_message(message + system_suffix)
+        except Exception as api_err:
+            print(f"[LLM] send_message API error for session '{session_id}': {type(api_err).__name__}: {api_err}")
+            return {
+                "reply": "I'm having trouble connecting right now. Please try again in a moment.",
+                "clarity_score": record.clarity_score,
+                "extracted_values": record.identified_values or []
+            }
         
         try:
             data = json.loads(response.text)
         except Exception as e:
-            print(f"Error parsing JSON from LLM: {response.text}")
-            data = {"reply": f"Sorry, I failed to process that correctly. {str(e)}", "clarity_score": 0, "extracted_values": []}
+            print(f"[LLM] JSON parse error for session '{session_id}': {response.text[:200]}")
+            data = {"reply": response.text.strip(), "clarity_score": record.clarity_score, "extracted_values": []}
 
         # 5. Serialize History and persist new state
         #    Since we injected system_suffix, we must dynamically strip it off the last user message 

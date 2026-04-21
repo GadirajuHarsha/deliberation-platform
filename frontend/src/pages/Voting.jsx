@@ -117,12 +117,16 @@ export default function Voting() {
 
                                 <div className="bg-white rounded-xl shadow-sm border border-surface-200 p-6">
                                         <h2 className="text-2xl font-bold text-surface-900 mb-2">Case #{selectedCase.id}: {selectedCase.title}</h2>
-                                        <p className="text-surface-600 mb-6">
-                                                You are adjusting your final programmatic stance via the native quadratic protocol structurally.
+                                        <p className="text-surface-600 mb-1">
+                                                Use your civic credits to signal <strong>how strongly you hold your position</strong> on this case.
+                                        </p>
+                                        <p className="text-surface-500 text-sm mb-6">
+                                                More votes = stronger signal that this case matters to you personally. Because of quadratic pricing, each additional vote costs progressively more — so spend where it counts.
                                         </p>
 
                                         <div className="bg-primary-50 rounded-lg p-6 border border-primary-100 flex flex-col items-center shadow-sm">
-                                                <h3 className="font-bold text-primary-900 mb-6 text-lg">Allocate Quadratic Votes</h3>
+                                                <h3 className="font-bold text-primary-900 mb-1 text-lg">How strongly do you hold your position?</h3>
+                                                <p className="text-primary-700 text-sm mb-6">Allocate votes to signal the intensity of your stance on this case.</p>
 
                                                 <div className="text-center mb-8">
                                                         <span className="text-6xl font-black text-primary-600 tracking-tighter drop-shadow-sm">{votes}</span>
@@ -162,7 +166,7 @@ export default function Voting() {
 
                                         <div className="mt-6 flex items-start p-4 bg-surface-100 text-surface-800 rounded-lg text-sm border border-surface-200">
                                                 <AlertCircle className="h-5 w-5 mr-3 flex-shrink-0 mt-0.5 text-surface-500" />
-                                                <p><strong>Quadratic Voting Active:</strong> Your influence scales quadratically. 1 vote costs 1 credit, but 10 votes cost 100 credits. Spend wisely!</p>
+                                                <p><strong>Quadratic Voting:</strong> Voting 1 costs 1 credit. Voting 5 costs 25. Voting 10 costs 100. This prevents any single voice from drowning everyone out — but lets you concentrate strongly on the cases that matter most to you.</p>
                                         </div>
 
                                         <div className="mt-8">
@@ -171,7 +175,7 @@ export default function Voting() {
                                                         disabled={submitting}
                                                         className={`w-full font-bold py-3 px-6 rounded-lg shadow-sm transition-colors text-lg ${submitting ? 'bg-surface-400 text-surface-200' : 'bg-primary-600 hover:bg-primary-700 text-white'}`}
                                                 >
-                                                        {submitting ? 'Locking Stance...' : 'Confirm Allocation'}
+                                                {submitting ? 'Submitting...' : originalVotes > 0 ? 'Update My Vote' : 'Submit My Vote'}
                                                 </button>
                                         </div>
                                 </div>
