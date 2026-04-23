@@ -16,7 +16,9 @@ google-api-python-client==2.190.0
 google-auth==2.48.0
 google-auth-httplib2==0.3.0
 google-cloud-aiplatform==1.139.0
+google-cloud-secret-manager==2.23.0
 pg8000==1.31.2
+pgvector==0.3.1
 passlib[bcrypt]
 email-validator
 google-cloud-bigquery==3.40.1

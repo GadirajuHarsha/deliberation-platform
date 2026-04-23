@@ -14,7 +14,7 @@ def seed_users():
         User(id="citizen-uid-003", email="contributor12@kinyarwanda.org", role="citizen", civic_credits=45, community_id="kinyarwanda"),
         User(id="citizen-uid-004", email="contributor8@swahili.org", role="citizen", civic_credits=120, community_id="swahili"),
         User(
-            id="admin-999",
+            id="admin-primary",
             email="admin@example.com",
             hashed_password=bcrypt.hashpw("password".encode('utf-8'), bcrypt.gensalt()).decode('utf-8'),
             civic_credits=9999,

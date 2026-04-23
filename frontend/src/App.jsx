@@ -23,6 +23,15 @@ function App() {
       <BrowserRouter>
         <ScrollToTop />
         <div className="min-h-screen flex flex-col font-sans">
+          {import.meta.env.VITE_DEMO_MODE === 'true' && (
+            <div className="bg-primary-900 text-primary-100 py-1.5 px-4 text-[10px] font-black uppercase tracking-[0.2em] text-center flex items-center justify-center gap-4">
+              <span className="opacity-50">Experimental Demo</span>
+              <span className="h-1 w-1 bg-primary-400 rounded-full"></span>
+              <span>Temporary Guest Session</span>
+              <span className="h-1 w-1 bg-primary-400 rounded-full"></span>
+              <span className="opacity-50">Data Not Persisted Globally</span>
+            </div>
+          )}
           <Navbar />
           <main className="flex-1 bg-surface-50 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Routes>

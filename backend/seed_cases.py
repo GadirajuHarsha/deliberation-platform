@@ -90,10 +90,10 @@ def main():
         print(f"[{i}/{len(CASES)}] Creating '{case['title']}'...")
         result = create_case(case)
         if result and "id" in result:
-            print(f"  ✓ Created as Case #{result['id']}")
+            print(f"  [SUCCESS] Created as Case #{result['id']}")
             print(f"  Opening message: {result.get('initial_message', '(none)')[:80]}...")
         else:
-            print(f"  ✗ Failed to create case.")
+            print(f"  [FAILED] Failed to create case.")
         # Small delay to avoid hammering the LLM API
         if i < len(CASES):
             time.sleep(2)

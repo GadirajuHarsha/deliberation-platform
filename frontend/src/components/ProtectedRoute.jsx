@@ -5,8 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 export default function ProtectedRoute({ children }) {
   const { currentUser } = useAuth();
   const location = useLocation();
+  const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
 
-  if (!currentUser) {
+  if (!currentUser && !isDemo) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 

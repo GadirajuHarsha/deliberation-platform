@@ -18,25 +18,44 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     // Session restoration
     const savedUser = sessionStorage.getItem('clarityUser');
+    const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
+
     if (savedUser) {
       setCurrentUser(JSON.parse(savedUser));
-    } else if (APP_MODE === 'demo') {
-      // Auto-login Curator for Demo Mode
+    } else if (isDemo) {
+      // Auto-generate guest user for no-login demo
+      const guestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
       const demoUser = { 
-        email: 'curator@example.com', 
-        uid: 'demo-curator',
-        role: 'developer',
-        community_id: 'global',
-        credits: 1000
+        id: guestId,
+        email: `${guestId}@demo.local`, 
+        uid: guestId,
+        role: 'citizen',
+        community_id: 'kinyarwanda',
+        credits: 100,
+        is_demo: true
       };
       setCurrentUser(demoUser);
       sessionStorage.setItem('clarityUser', JSON.stringify(demoUser));
     }
     setLoading(false);
-  }, [APP_MODE]);
+  }, []);
 
   const login = async (email, password) => {
-    if (APP_MODE === 'demo') return { status: 'success' };
+    if (APP_MODE === 'demo') {
+      const guestId = `guest_${Math.random().toString(36).substr(2, 9)}`;
+      const demoUser = { 
+        id: guestId,
+        email: `guest@demo.local`, 
+        uid: guestId,
+        role: 'citizen',
+        community_id: 'kinyarwanda',
+        credits: 100,
+        is_demo: true
+      };
+      setCurrentUser(demoUser);
+      sessionStorage.setItem('clarityUser', JSON.stringify(demoUser));
+      return { status: 'success', user: demoUser };
+    }
 
     try {
       const response = await fetch(`${API_URL}/auth/login`, {

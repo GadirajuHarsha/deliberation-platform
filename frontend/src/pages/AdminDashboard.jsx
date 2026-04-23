@@ -10,6 +10,7 @@ export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
     const [cases, setCases] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('cases'); // 'cases' or 'users'
     const [creditEdits, setCreditEdits] = useState({});
     
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         setLoading(true);
+        setError(null);
         const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
         try {
             const [usersRes, casesRes] = await Promise.all([
@@ -31,10 +33,18 @@ export default function AdminDashboard() {
                 fetch(`${API_URL}/cases`)
             ]);
             
-            setUsers(await usersRes.json());
-            setCases(await casesRes.json());
+            if (!usersRes.ok || !casesRes.ok) {
+                throw new Error("Governance API offline");
+            }
+
+            const userData = await usersRes.json();
+            const caseData = await casesRes.json();
+
+            setUsers(Array.isArray(userData) ? userData : []);
+            setCases(Array.isArray(caseData) ? caseData : []);
         } catch (e) {
-            console.error("Dashboard network crash.");
+            console.error("Dashboard network crash:", e);
+            setError("Critical synchronization failure. The Governance API might be undergoing maintenance.");
         } finally {
             setLoading(false);
         }
@@ -111,6 +121,13 @@ export default function AdminDashboard() {
                     <RefreshCw className="h-4 w-4 mr-2" /> Sync Data
                 </button>
             </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-3 mb-6">
+                    <AlertCircle className="h-5 w-5 text-red-500" />
+                    <p className="text-red-700 font-medium text-sm">{error}</p>
+                </div>
+            )}
 
             <div className="flex gap-4 mb-6 border-b border-surface-200 pb-px">
                 <button 
