@@ -33,7 +33,7 @@ export default function Navbar() {
                                                         <div className="flex items-baseline gap-1.5">
                                                                 <span className="font-sans font-bold text-2xl text-surface-700 tracking-tight leading-none">Clarity</span>
                                                                 <span className="text-base font-medium text-surface-500 leading-none hidden sm:block">
-                                                                        for Mozilla Common Voice
+                                                                        for collective deliberation
                                                                 </span>
                                                         </div>
                                                 </Link>
