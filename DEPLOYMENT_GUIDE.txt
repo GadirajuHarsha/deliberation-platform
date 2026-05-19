@@ -1,0 +1,95 @@
+# Deliberation Platform - Deployment Guide
+
+This document explains how to deploy the frontend and backend of this repository to Google Cloud Platform (GCP) and Firebase. 
+
+Since the deployment targets (like the GCP Project ID) are already configured in the codebase, any developer with the correct GCP permissions can deploy this project from their own machine simply by authenticating their local environment.
+
+---
+
+## Prerequisites
+
+Before deploying, ensure you have the following installed on your machine:
+
+1. **Node.js & npm** (Required for frontend)
+   - Download from https://nodejs.org/ (Version 20+ recommended).
+   - Verify installation: `node -v` and `npm -v`
+
+2. **Google Cloud CLI (`gcloud`)** (Required for backend Cloud Run deployment)
+   - Install instructions: https://cloud.google.com/sdk/docs/install
+   - Verify installation: `gcloud --version`
+
+---
+
+## 1. Authentication Setup
+
+You must authenticate your terminal with the Google Account that has permissions for the GCP Project (`info-deliberation-tooling-prod`).
+
+**Authenticate Google Cloud CLI (For Backend):**
+Open your terminal and run:
+```bash
+gcloud auth login
+gcloud config set project info-deliberation-tooling-prod
+```
+This will open a browser window for you to log into your Google Account.
+
+**Authenticate Firebase CLI (For Frontend):**
+The repository uses `firebase-tools` via `npx`, so you don't need to install it globally. Just navigate to the frontend directory and log in:
+```bash
+cd frontend
+npx firebase login
+```
+This will also open a browser window to authenticate Firebase.
+
+---
+
+## 2. Deploying the Frontend (Firebase Hosting)
+
+The frontend is a React/Vite application that is hosted on Firebase Hosting. The deployment scripts are pre-configured in `package.json` to deploy to the correct project.
+
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies (only needed the first time):
+   ```bash
+   npm install
+   ```
+3. Deploy to Production:
+   ```bash
+   npm run deploy:prod
+   ```
+   *(This script automatically builds the Vite app for the live environment and pushes the compiled files to Firebase Hosting).*
+
+4. Deploy to Demo (Optional):
+   ```bash
+   npm run deploy:demo
+   ```
+
+---
+
+## 3. Deploying the Backend (Google Cloud Run)
+
+The backend is a FastAPI Python application. It is containerized and deployed to Google Cloud Run. 
+
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Deploy to Cloud Run:
+   Run the following command. Note that you will need the `GEMINI_API_KEY` for the backend to function properly.
+   ```bash
+   gcloud run deploy backend-service \
+       --source . \
+       --port 8080 \
+       --allow-unauthenticated \
+       --region us-central1 \
+       --set-env-vars="GEMINI_API_KEY=your_gemini_api_key_here"
+   ```
+   *Note: If the Cloud Run service is already created and has the environment variables set, you can omit the `--set-env-vars` flag on subsequent deployments.*
+
+---
+
+## Troubleshooting
+
+- **"Permission Denied" errors:** Ensure the Google account you authenticated with has the `Editor` role (or `Firebase Admin` + `Cloud Run Developer`) on the `info-deliberation-tooling-prod` GCP project.
+- **"Project Not Found" errors:** Verify that the project ID is exactly `info-deliberation-tooling-prod`.
